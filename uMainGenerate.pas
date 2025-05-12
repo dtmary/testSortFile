@@ -30,6 +30,7 @@ type
     procedure actGenerateExecute(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure ActCancelExecute(Sender: TObject);
+    procedure stopaction;
   private
     { Private declarations }
      bstop:boolean;
@@ -48,28 +49,33 @@ implementation
 
 {$R *.dfm}
 
-procedure TfmGenerate.ActCancelExecute(Sender: TObject);
+procedure TfmGenerate.stopaction;
 begin
   bstop := true;
   lbGen.Visible := false;
   ProgressBar.Visible := false;
   actGenerate.Enabled := true;
   ActCancel.Enabled := false;
-  close;
+end;
+
+procedure TfmGenerate.ActCancelExecute(Sender: TObject);
+begin
+  stopaction;
 end;
 
 procedure TfmGenerate.actGenerateExecute(Sender: TObject);
 var
-  f:textFile;
+  f:TextFile;
   sWrite:string;
   count:longInt;
   fileName:String;
   needFileSize:Int64;
   cureileSize:int64;
 begin
+  bstop := false;
   actGenerate.Enabled := false;
   ActCancel.Enabled := true;
-  fileName := edtFileName.Text+'.txt';
+  fileName := edtFileName.Text;
   AssignFile(f, fileName);
   rewrite(f);
   needFileSize := StrToInt(edtSize.text)*MEGABITE;
@@ -80,21 +86,30 @@ begin
     count := 0;
     needFileSize := MEGABITE*StrToInt(edtSize.text);
     cureileSize := 0;
+    WriteLn(f,'1.Мама мыла раму');
+    WriteLn(f,'2.Шла по телеку реклама');
+    WriteLn(f,'4.Шла по телеку реклама');
+    WriteLn(f,'3.Кончилась реклама');
+    WriteLn(f,'4.Мама есть, но нету рамы');
+    WriteLn(f,'15.Шла Саша по шоссе');
     while ((cureileSize <= needFileSize) and not(bstop)) do
     begin
-      sWrite := IntToStr(count) + '.sdfsadfs';
       cureileSize := GetFileSize(fileName);
+      sWrite := IntToStr(random(2000000)) + '.'+ IntToStr(random(1000));
       WriteLn(f,sWrite);
-      StatusBar.Panels[0].Text := intToStr(count);
-      StatusBar.Panels[1].Text := IntToStr(trunc(GetFileSize(fileName)/MEGABITE)) + ' из '+ edtSize.text+'МБ';
-      ProgressBar.Position := trunc(GetFileSize(fileName)/MEGABITE);
-      Application.ProcessMessages;
       count := count + 1;
+      if (count mod 200000) = 0 then
+      begin
+        StatusBar.Panels[0].Text := intToStr(count);
+        StatusBar.Panels[1].Text := IntToStr(trunc(GetFileSize(fileName)/MEGABITE)) + ' из '+ edtSize.text+'МБ';
+        ProgressBar.Position := trunc(GetFileSize(fileName)/MEGABITE);
+        Application.ProcessMessages;
+      end;
     end;
   finally
     closeFile(f);
-    bstop := false;
   end;
+  stopaction;
 end;
 
 procedure TfmGenerate.ActSetFilePathExecute(Sender: TObject);
@@ -120,6 +135,6 @@ except
   Result := -1;
 end;
 
- end;
+end;
 
 end.
